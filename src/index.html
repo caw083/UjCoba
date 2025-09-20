@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html;charset=UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="shortcut icon" href="/story.png" />
+    <title>App</title>
+    <script type="module" src="/scripts/index.js"></script>
+    
+    <link rel="stylesheet" href="./styles/header.css">
+    <link rel="stylesheet" href="./styles/drawer.css">
+    <link rel="stylesheet" href="./styles/styles.css">
+    <link rel="stylesheet" href="./styles/footer.css">
+  </head>
+  <body>
+    <header>
+      <div class="main-header header_container">
+        <div class="header_icon">
+          <div class="icon"><img src="/story.png" width="50px" height="50px" alt="StoryApps"/></div>
+          <a class="brand-name" href="#/">Story App</a>
+        </div>
+        <nav id="navigation-drawer" class="navigation-drawer">
+          <ul id="nav-list" class="nav-list">
+            <li><a href="#/">🏠 Beranda</a></li>
+            <li><a href="#/about">ℹ️ About</a></li>
+            <li id="loginUser"><a href="#/login">🔑 Login</a></li>
+            <li><a href="#/addstory">➕ Add Story</a></li>
+            <li id="logoutUser" class="Gone"><a href="#/logout">🚪 Logout</a></li>
+          </ul>
+        </nav>
+
+        <button id="drawer-button" class="drawer-button">☰</button>
+      </div>
+    </header>
+
+    <main id="main-content" class="main-content"></main>
+    <footer>
+      <div class="container">
+        <hr />
+        <div class="footer-content">
+          <a class="brand-name__link" href="#/">
+            <img src="/story.png" width="50px" height="50px" alt="StoryApps"/>
+          </a>
+          <p class="copyright"><span class="brand-name__link__text">Story Apps </span>&copy; 2025 Christopher. All rights reserved.</p>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

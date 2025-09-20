@@ -1,0 +1,35 @@
+@baseUrl = https://story-api.dicoding.dev/v1
+
+### Register
+POST {{baseUrl}}/register
+Content-Type: application/json
+
+{
+  "name": "christo",
+  "email": "christo083@gmail.com",
+  "password": "12345678"
+}
+
+
+### Login
+POST {{baseUrl}}/login
+Content-Type: application/json
+
+{
+  "email": "christo083@gmail.com",
+  "password": "12345678"
+}
+
+
+
+### getGuestURL
+
+GET {{baseUrl}}/stories
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJ1c2VyLWJyWXdJZ2o3TG9uaEdmMDUiLCJpYXQiOjE3NTgxMDA1NDZ9.PhJAYot_sLL2KxJbVIQXYC5X4_gP0u1HZgAjyhj--j4
+
+#####
+GET {{baseUrl}}/stories
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJ1c2VyLWJyWXdJZ2o3TG9uaEdmMDUiLCJpYXQiOjE3NTgxMDA1NDZ9.PhJAYot_sLL2KxJbVIQXYC5X4_gP0u1HZgAjyhj--j4
+
+#### Map Tiller
+GET https://api.maptiler.com/geocoding/106.8274,-6.1792.json?key=Kb29jRhBtXr8rf5YsLeL
