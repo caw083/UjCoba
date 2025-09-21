@@ -78,7 +78,7 @@ export default class MapForm {
     }
   }
 
-  async #initializeMap() {
+async #initializeMap() {
     const mapBtn = document.getElementById('init-map-btn');
     const loadingContainer = document.getElementById('map-loading-container');
     const mapContainer = document.getElementById('map-container');
@@ -92,93 +92,115 @@ export default class MapForm {
     mapBtn.textContent = 'Loading Map...';
     
     try {
-      console.log('Starting map initialization...');
-      
-      // Wait a bit for DOM to be stable
-      await new Promise(resolve => setTimeout(resolve, 300));
-      
-      // Check if map element exists and is ready
-      const mapElement = document.getElementById('map');
-      if (!mapElement) {
-        throw new Error('Map element not found in DOM');
-      }
-      
-      // Show map container before initialization
-      mapContainer.style.display = 'block';
-      loadingContainer.style.display = 'none';
-      
-      // Wait for container to be displayed
-      await new Promise(resolve => setTimeout(resolve, 100));
-      
-      console.log('Building map with Map.build...');
-      
-      // Try to build map with location
-      this.#map = await Map.build('#map', {
-        zoom: 13,
-        locate: true,
-      });
-      
-      if (!this.#map) {
-        throw new Error('Map.build returned null or undefined');
-      }
-      
-      console.log('Map built successfully:', this.#map);
-      
-      // Get center coordinate and update inputs
-      const centerCoordinate = this.#map.getCenter();
-      console.log('Map center:', centerCoordinate);
-      
-      if (centerCoordinate && centerCoordinate.latitude !== undefined && centerCoordinate.longitude !== undefined) {
-        this.#updateLatLngInput(centerCoordinate.latitude, centerCoordinate.longitude);
+        console.log('Starting map initialization...');
         
-        // Add draggable marker
-        this.#currentMarker = this.#map.addMarker(
-          [centerCoordinate.latitude, centerCoordinate.longitude],
-          { draggable: true }
-        );
+        // Wait a bit for DOM to be stable
+        await new Promise(resolve => setTimeout(resolve, 300));
         
-        console.log('Marker added:', this.#currentMarker);
-        
-        // Add event listener using Leaflet's event system
-        if (this.#currentMarker && typeof this.#currentMarker.on === 'function') {
-          this.#currentMarker.on('dragend', (event) => {
-            console.log('Marker moved');
-            const coordinate = event.target.getLatLng();
-            this.#updateLatLngInput(coordinate.lat, coordinate.lng);
-          });
+        // Check if map element exists and is ready
+        const mapElement = document.getElementById('map');
+        if (!mapElement) {
+            throw new Error('Map element not found in DOM');
         }
-      }
-      
-      this.#mapInitialized = true;
-      mapBtn.textContent = 'Hide Map';
-      mapBtn.disabled = false;
-      
-      console.log('Map initialization completed successfully');
-      
-    } catch (error) {
-      console.error('Map initialization failed:', error);
-      
-      // Hide map container and show error
-      mapContainer.style.display = 'none';
-      errorContainer.style.display = 'block';
-      const errorMessageEl = document.getElementById('map-error-message');
-      if (errorMessageEl) {
-        errorMessageEl.textContent = error.message;
-      }
-      
-      mapBtn.disabled = false;
-      mapBtn.textContent = 'Retry Map';
-      
-      // Reset initialization flag so user can retry
-      this.#mapInitialized = false;
-      
-      // Call error callback
-      this.onError(error);
-    } finally {
-      loadingContainer.style.display = 'none';
-    }
-  }
+        
+        // Show map container before initialization
+        mapContainer.style.display = 'block';
+        loadingContainer.style.display = 'none';
+        
+        // Wait for container to be displayed
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
+        console.log('Building map with Map.build...');
+        
+        // === AWAL PERUBAHAN ===
+        // Cek dulu apakah sudah ada lokasi dari tombol sebelumnya
+        const currentLocation = this.getLocation();
 
+        const mapBuildOptions = {
+            zoom: 13,
+        };
+
+        if (currentLocation && currentLocation.latitude && currentLocation.longitude) {
+            // Jika sudah ada koordinat, jadikan itu sebagai pusat peta
+            console.log('Using existing coordinates:', currentLocation);
+            mapBuildOptions.center = [currentLocation.latitude, currentLocation.longitude];
+        } else {
+            // Jika belum ada koordinat, baru aktifkan fitur pencarian lokasi otomatis
+            console.log('No existing coordinates found, using locate feature');
+            mapBuildOptions.locate = true;
+        }
+
+        // Gunakan mapBuildOptions saat memanggil Map.build
+        this.#map = await Map.build('#map', mapBuildOptions);
+        // === AKHIR PERUBAHAN ===
+        
+        if (!this.#map) {
+            throw new Error('Map.build returned null or undefined');
+        }
+        
+        console.log('Map built successfully:', this.#map);
+        
+        // Sisa kode setelah ini bisa tetap sama, karena peta akan
+        // diinisialisasi dengan koordinat yang benar.
+        const centerCoordinate = this.#map.getCenter();
+        
+        if (centerCoordinate && centerCoordinate.latitude !== undefined && centerCoordinate.longitude !== undefined) {
+            // Hanya update input jika menggunakan locate (koordinat baru dari peta)
+            // Jika menggunakan koordinat existing, tidak perlu update input lagi
+            if (!currentLocation || !currentLocation.latitude || !currentLocation.longitude) {
+                this.#updateLatLngInput(centerCoordinate.latitude, centerCoordinate.longitude);
+            }
+            
+            // Add draggable marker
+            this.#currentMarker = this.#map.addMarker(
+                [centerCoordinate.latitude, centerCoordinate.longitude],
+                { draggable: true }
+            );
+            
+            console.log('Marker added:', this.#currentMarker);
+            
+            // Add event listener using Leaflet's event system
+            if (this.#currentMarker && typeof this.#currentMarker.on === 'function') {
+                this.#currentMarker.on('dragend', (event) => {
+                    console.log('Marker moved');
+                    const coordinate = event.target.getLatLng();
+                    this.#updateLatLngInput(coordinate.lat, coordinate.lng);
+                });
+            }
+        }
+        
+        this.#mapInitialized = true;
+        mapBtn.textContent = 'Hide Map';
+        mapBtn.disabled = false;
+        
+        console.log('Map initialization completed successfully');
+        
+    } catch (error) {
+        console.error('Map initialization failed:', error);
+        
+        // Hide map container and show error
+        mapContainer.style.display = 'none';
+        errorContainer.style.display = 'block';
+        const errorMessageEl = document.getElementById('map-error-message');
+        if (errorMessageEl) {
+            errorMessageEl.textContent = error.message;
+        }
+        
+        mapBtn.disabled = false;
+        mapBtn.textContent = 'Retry Map';
+        
+        // Reset initialization flag so user can retry
+        this.#mapInitialized = false;
+        
+        // Call error callback if it exists
+        if (this.onError && typeof this.onError === 'function') {
+            this.onError(error);
+        }
+        
+    } finally {
+        loadingContainer.style.display = 'none';
+    }
+}
   #toggleMapVisibility() {
     const mapContainer = document.getElementById('map-container');
     const mapBtn = document.getElementById('init-map-btn');

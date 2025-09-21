@@ -1,5 +1,6 @@
-// services/authService.js
+// Update src/scripts/pages/login/loginAuth.js
 import CONFIG from "../../config";
+import { tokenService } from "../../utils/tokenService/tokenService";
 
 const ENDPOINTS = {
     BASE_URL: CONFIG.BASE_URL,
@@ -27,6 +28,12 @@ export class AuthService {
             }
 
             const data = await response.json();
+            
+            // Save token using TokenService
+            if (data.loginResult && data.loginResult.token) {
+                tokenService.saveToken(data.loginResult.token);
+            }
+            
             return data;
         } catch (error) {
             throw new Error(`Login error: ${error.message}`);
@@ -34,14 +41,22 @@ export class AuthService {
     }
 
     static saveToken(token) {
-        localStorage.setItem('authToken', token);
+        return tokenService.saveToken(token);
     }
 
     static getToken() {
-        return localStorage.getItem('authToken');
+        return tokenService.getToken();
     }
 
     static removeToken() {
-        localStorage.removeItem('authToken');
+        return tokenService.removeToken();
+    }
+    
+    static isAuthenticated() {
+        return tokenService.isAuthenticated();
+    }
+    
+    static logout() {
+        tokenService.clearAuthData();
     }
 }

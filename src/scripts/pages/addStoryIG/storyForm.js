@@ -1,10 +1,13 @@
 import "./formDesign/mapForm.css"
 import "./formDesign/storyForm.css"
+import "./formDesign/guestLogin.css"
 
 import StoryFormValidator from "./component/storyFormValidation";
 import cameraComponent from "./component/cameraComponent";
 import MapForm from "./component/mapForm";
 import StoryAPI from "./sendData/sendStory";
+
+import { tokenService } from "../../utils/tokenService/tokenService";
 
 export default class AddStoryForm {
   #form;
@@ -14,14 +17,17 @@ export default class AddStoryForm {
 
   constructor(options = {}) {
     this.isGuest = options.isGuest || false;
-    this.token = options.token || null;
+    this.token = options.token || tokenService.getToken();
+
     this.onSuccess = options.onSuccess || (() => {});
     this.onError = options.onError || ((error) => console.error(error));
+    this.onGuestModeChange = options.onGuestModeChange || (() => {});
     
     // File size limit in bytes (1MB = 1024 * 1024 bytes)
     this.maxFileSize = 1024 * 1024; // 1MB
     
     this.validator = new StoryFormValidator();
+    console.log("form page", this.token);
     
     // Initialize API service
     this.#storyAPI = new StoryAPI({
@@ -33,7 +39,28 @@ export default class AddStoryForm {
     return `
       <section class="container">
         <div class="add-story-form">
-          <h1>${this.isGuest ? 'Add Story (Guest)' : 'Add New Story'}</h1>
+          <h1>Add New Story</h1>
+          
+          <!-- Login Mode Selection -->
+          <div class="form-group login-mode-selection">
+            <label for="login-mode">Login Mode</label>
+            <select id="login-mode" name="login-mode" class="form-select">
+              <option value="authenticated" ${!this.isGuest ? 'selected' : ''}>
+                Login with Account
+              </option>
+              <option value="guest" ${this.isGuest ? 'selected' : ''}>
+                Login as Guest
+              </option>
+            </select>
+            <div class="login-mode-info">
+              <small id="login-mode-description">
+                ${this.isGuest 
+                  ? 'You are posting as a guest. Your story will be public but not linked to an account.' 
+                  : 'You are logged in with your account. Your story will be saved to your profile.'
+                }
+              </small>
+            </div>
+          </div>
           
           <form id="story-form" class="story-form">
             <div class="form-group">
@@ -51,13 +78,30 @@ export default class AddStoryForm {
               </div>
             </div>
 
+            <!-- Guest Information Section -->
+            <div id="guest-info-section" class="form-group guest-section" ${!this.isGuest ? 'style="display: none;"' : ''}>
+              <label for="guest-name">Name (Optional for Guest)</label>
+              <input 
+                type="text" 
+                id="guest-name" 
+                name="guest-name" 
+                placeholder="Enter your name (optional)"
+                maxlength="50"
+              />
+              <div class="field-info">
+                <small>Optional: Add your name to be displayed with the story</small>
+              </div>
+            </div>
+
             <div id="camera-component-container"></div>
 
             <div id="map-form-container"></div>
 
             <div class="form-actions">
               <span id="submit-button-container">
-                <button class="btn" type="submit">Add Story</button>
+                <button class="btn" type="submit">
+                  ${this.isGuest ? 'Add Story as Guest' : 'Add Story'}
+                </button>
               </span>
               <button type="button" class="btn btn-outline" id="cancel-btn">Cancel</button>
             </div>
@@ -73,6 +117,9 @@ export default class AddStoryForm {
     // Setup in sequence with proper waiting
     this.#setupForm();
     console.log('Form setup completed');
+    
+    this.#setupLoginModeSelection();
+    console.log('Login mode selection setup completed');
     
     this.#setupCameraComponent();
     console.log('Camera component setup completed');
@@ -105,6 +152,46 @@ export default class AddStoryForm {
     // Cancel button
     document.getElementById('cancel-btn').addEventListener('click', () => {
       this.#resetForm();
+    });
+  }
+
+  #setupLoginModeSelection() {
+    const loginModeSelect = document.getElementById('login-mode');
+    const loginModeDescription = document.getElementById('login-mode-description');
+    const guestInfoSection = document.getElementById('guest-info-section');
+    const submitButton = document.querySelector('#submit-button-container button');
+
+    loginModeSelect.addEventListener('change', (e) => {
+      const selectedMode = e.target.value;
+      const wasGuest = this.isGuest;
+      this.isGuest = selectedMode === 'guest';
+
+      // Update description text
+      if (this.isGuest) {
+        loginModeDescription.textContent = 'You are posting as a guest. Your story will be public but not linked to an account.';
+        guestInfoSection.style.display = 'block';
+        if (submitButton) {
+          submitButton.textContent = 'Add Story as Guest';
+        }
+      } else {
+        loginModeDescription.textContent = 'You are logged in with your account. Your story will be saved to your profile.';
+        guestInfoSection.style.display = 'none';
+        if (submitButton) {
+          submitButton.textContent = 'Add Story';
+        }
+      }
+
+      // Update API service guest mode
+      if (this.#storyAPI) {
+        this.#storyAPI.setGuestMode(this.isGuest);
+      }
+
+      // Call callback if mode changed
+      if (wasGuest !== this.isGuest) {
+        this.onGuestModeChange(this.isGuest);
+      }
+
+      console.log('Login mode changed to:', selectedMode, 'isGuest:', this.isGuest);
     });
   }
 
@@ -170,9 +257,7 @@ export default class AddStoryForm {
     }
   }
 
-  #handleLocationChange(locationData) {
-    console.log('Location changed:', locationData);
-    
+  #handleLocationChange(locationData) {    
     // Show success message if location was updated with accuracy info
     if (locationData.message) {
       this.#showMessage(locationData.message, 'success');
@@ -200,7 +285,10 @@ export default class AddStoryForm {
       const response = await this.#storyAPI.submitStory(formData, this.isGuest);
       
       if (response.error === false) {
-        this.#showMessage('Story added successfully!', 'success');
+        const successMessage = this.isGuest 
+          ? 'Story added successfully as guest!' 
+          : 'Story added successfully!';
+        this.#showMessage(successMessage, 'success');
         this.#resetForm();
         this.onSuccess(response);
       } else {
@@ -232,7 +320,8 @@ export default class AddStoryForm {
         description: this.#form.elements.namedItem('description').value,
         photo: capturedImage,
         lat: location ? location.latitude : '',
-        lon: location ? location.longitude : ''
+        lon: location ? location.longitude : '',
+        guestName: this.isGuest ? (this.#form.elements.namedItem('guest-name')?.value || '') : ''
       };
 
       return this.validator.validateForm(formData);
@@ -246,12 +335,21 @@ export default class AddStoryForm {
     const location = this.#mapFormComponent.getLocation();
     const capturedImage = this.#cameraComponent.getCapturedImage();
     
-    return {
+    const storyData = {
       description: this.#form.elements.namedItem('description').value,
       photo: capturedImage,
       lat: location ? location.latitude : null,
-      lon: location ? location.longitude : null
+      lon: location ? location.longitude : null,
+      isGuest: this.isGuest
     };
+
+    // Add guest name if in guest mode
+    if (this.isGuest) {
+      const guestNameInput = this.#form.elements.namedItem('guest-name');
+      storyData.guestName = guestNameInput ? guestNameInput.value.trim() : '';
+    }
+
+    return storyData;
   }
 
   #resetForm() {
@@ -274,6 +372,12 @@ export default class AddStoryForm {
     if (charCounter) {
       charCounter.textContent = '0/500';
       charCounter.style.color = '#6b7280';
+    }
+
+    // Reset login mode to current state
+    const loginModeSelect = document.getElementById('login-mode');
+    if (loginModeSelect) {
+      loginModeSelect.value = this.isGuest ? 'guest' : 'authenticated';
     }
   }
 
@@ -328,9 +432,10 @@ export default class AddStoryForm {
   #showSubmitLoadingButton() {
     const container = document.getElementById('submit-button-container');
     if (container) {
+      const buttonText = this.isGuest ? 'Adding Story as Guest...' : 'Adding Story...';
       container.innerHTML = `
         <button class="btn" type="submit" disabled style="opacity: 0.6;">
-          Adding Story...
+          ${buttonText}
         </button>
       `;
     }
@@ -339,8 +444,9 @@ export default class AddStoryForm {
   #hideSubmitLoadingButton() {
     const container = document.getElementById('submit-button-container');
     if (container) {
+      const buttonText = this.isGuest ? 'Add Story as Guest' : 'Add Story';
       container.innerHTML = `
-        <button class="btn" type="submit">Add Story</button>
+        <button class="btn" type="submit">${buttonText}</button>
       `;
     }
   }
@@ -350,10 +456,39 @@ export default class AddStoryForm {
     this.token = token;
     this.isGuest = !token;
     this.#storyAPI.setToken(token);
+    
+    // Update UI to reflect authentication state
+    this.#updateLoginModeUI();
   }
 
   setGuestMode(isGuest) {
     this.isGuest = isGuest;
+    this.#updateLoginModeUI();
+  }
+
+  #updateLoginModeUI() {
+    const loginModeSelect = document.getElementById('login-mode');
+    const guestInfoSection = document.getElementById('guest-info-section');
+    const submitButton = document.querySelector('#submit-button-container button');
+    const loginModeDescription = document.getElementById('login-mode-description');
+
+    if (loginModeSelect) {
+      loginModeSelect.value = this.isGuest ? 'guest' : 'authenticated';
+    }
+
+    if (guestInfoSection) {
+      guestInfoSection.style.display = this.isGuest ? 'block' : 'none';
+    }
+
+    if (submitButton) {
+      submitButton.textContent = this.isGuest ? 'Add Story as Guest' : 'Add Story';
+    }
+
+    if (loginModeDescription) {
+      loginModeDescription.textContent = this.isGuest 
+        ? 'You are posting as a guest. Your story will be public but not linked to an account.'
+        : 'You are logged in with your account. Your story will be saved to your profile.';
+    }
   }
 
   setApiBaseUrl(url) {
@@ -368,6 +503,20 @@ export default class AddStoryForm {
 
   getLocation() {
     return this.#mapFormComponent ? this.#mapFormComponent.getLocation() : null;
+  }
+
+  // Get current guest mode
+  getGuestMode() {
+    return this.isGuest;
+  }
+
+  // Get guest name if in guest mode
+  getGuestName() {
+    if (this.isGuest) {
+      const guestNameInput = document.getElementById('guest-name');
+      return guestNameInput ? guestNameInput.value.trim() : '';
+    }
+    return '';
   }
 
   // Method to set custom file size limit (optional)

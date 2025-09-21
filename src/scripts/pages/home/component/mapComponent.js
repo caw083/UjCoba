@@ -27,9 +27,7 @@ export default class MapComponent {
       return "Unknown Location";
     }    
     try {
-      console.log(`Getting location for: ${lat}, ${lon}`);
       const cityName = await getCityofGeocode(lon, lat); // lon, lat (longitude dulu)
-      console.log(`Location result: ${cityName}`);
       return cityName;
     } catch (error) {
       console.error('Error getting location:', error);

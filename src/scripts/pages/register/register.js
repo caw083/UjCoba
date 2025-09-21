@@ -14,7 +14,7 @@ export default class Register {
           <form id="registerForm" class="register-form">
             <div class="form-group">
               <label for="name">Nama:</label>
-              <input type="text" id="name" name="name" required>
+              <input type="text" id="name" name="name" class="name" required>
             </div>
             
             <div class="form-group">

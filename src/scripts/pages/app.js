@@ -1,5 +1,6 @@
 import routes from '../routes/routes';
 import { getActiveRoute } from '../routes/url-parser';
+import { tokenService } from "../utils/tokenService/tokenService";
 
 class App {
   #content = null;
@@ -34,6 +35,28 @@ class App {
       });
     });
   }
+  #setupAuthUI() {
+    const loginMenu = document.getElementById("loginUser");
+    const logoutMenu = document.getElementById("logoutUser");
+    if (tokenService.isAuthenticated()) {
+      loginMenu.classList.add("Gone");
+      logoutMenu.classList.remove("Gone");
+    } else {
+      loginMenu.classList.remove("Gone");
+      logoutMenu.classList.add("Gone");
+    }
+    // attach event logout
+    const logoutBtn = logoutMenu.querySelector("a");
+    if (logoutBtn) {
+      logoutBtn.onclick = (e) => {
+        e.preventDefault();
+        tokenService.clearAuthData();
+        loginMenu.classList.remove("Gone");
+        logoutMenu.classList.add("Gone");
+        window.location.hash = "/login";
+      };
+    }
+  }
 
   async renderPage() {
     const url = getActiveRoute();
@@ -41,6 +64,8 @@ class App {
 
     this.#content.innerHTML = await page.render();
     await page.afterRender();
+    this.#setupAuthUI();
+
   }
 }
 

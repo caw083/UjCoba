@@ -1,9 +1,7 @@
 import CONFIG from "../../../config";
 
 // Fungsi untuk mengambil data reverse geocoding dari MapTiler API
-export async function getReverseGeocode(longitude, latitude) {
-  console.log(`Getting reverse geocode for: ${longitude}, ${latitude}`);
-  
+export async function getReverseGeocode(longitude, latitude) {  
   try {
     const url = `${CONFIG.MAP_TILLER_URL}/${longitude},${latitude}.json?key=${CONFIG.MAP_TILLER_API_KEY}`;
     
@@ -23,9 +21,7 @@ export async function getReverseGeocode(longitude, latitude) {
 }
 
 // Fungsi untuk mengambil nama kota dari koordinat
-export async function getCityofGeocode(longitude, latitude) {
-  console.log(`Getting city name for: ${longitude}, ${latitude}`);
-  
+export async function getCityofGeocode(longitude, latitude) {  
   try {
     const geocodeData = await getReverseGeocode(longitude, latitude);
     

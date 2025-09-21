@@ -1,6 +1,8 @@
+// Update src/scripts/pages/login/loginApi.js
 import { MessageHandler } from "./loginMessageHandler";
 import { AuthService } from "./loginAuth";
 import { Validators } from "./loginValidator";
+import { NavigationLoginService } from "./loginNavigation";
 
 export class LoginHandler {
     constructor() {
@@ -36,16 +38,11 @@ export class LoginHandler {
             // Show success message
             MessageHandler.showMessage('Login successful! Redirecting...', 'success');
             
-            // Save token if login successful
-            if (result.loginResult && result.loginResult.token) {
-                AuthService.saveToken(result.loginResult.token);
-            }
-            
             // Reset form and handle success
             setTimeout(() => {
                 form.reset();
                 this.handleLoginSuccess(result);
-            }, 2000);
+            }, 1500);
             
         } catch (error) {
             MessageHandler.showMessage('Login failed: ' + error.message, 'error');
@@ -63,8 +60,7 @@ export class LoginHandler {
             this.onLoginSuccess(result);
         }
         
-        // Example implementations:
-        // window.location.href = '/dashboard';
-        // window.dispatchEvent(new CustomEvent('userLoggedIn', { detail: result }));
+        // Redirect to home page
+        NavigationLoginService.goToHome();
     }
 }

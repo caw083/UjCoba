@@ -6,6 +6,7 @@ import { getCityofGeocode } from "./api_data/reverseGeocoding";
 import StoryModal from "./component/storyModal";
 import MapComponent from "./component/mapComponent";
 import FilterComponent from "./component/filterComponent";
+import { tokenService } from "../../utils/tokenService/tokenService";
 
 export default class HomePage {
   constructor() {
@@ -17,7 +18,8 @@ export default class HomePage {
     this.currentFilteredData = [];
     this.isProcessingFilter = false; // Prevent recursive filter calls
     this.locationCache = new Map(); // Cache locations to avoid duplicate API calls
-    this.token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJ1c2VyLWJyWXdJZ2o3TG9uaEdmMDUiLCJpYXQiOjE3NTgxMDA1NDZ9.PhJAYot_sLL2KxJbVIQXYC5X4_gP0u1HZgAjyhj--j4"
+    this.token = tokenService.getToken() || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJ1c2VyLWJyWXdJZ2o3TG9uaEdmMDUiLCJpYXQiOjE3NTgxMDA1NDZ9.PhJAYot_sLL2KxJbVIQXYC5X4_gP0u1HZgAjyhj--j4";
+    console.log(this.token);
   }
 
   formatDate(dateString) {
@@ -43,9 +45,7 @@ export default class HomePage {
     }
     
     try {
-      console.log(`Getting location for: ${lat}, ${lon}`);
       const cityName = await getCityofGeocode(lon, lat);
-      console.log(`Location result: ${cityName}`);
       
       // Cache the result
       this.locationCache.set(cacheKey, cityName);
@@ -134,7 +134,6 @@ export default class HomePage {
 
   initializeFilter() {
     try {
-      console.log('Initializing filter...');
       
       // Don't initialize if already initialized
       if (this.filterComponent) {
@@ -162,7 +161,6 @@ export default class HomePage {
 
       // Set up filter change callback
       this.filterComponent.onFilterChangeCallback((filteredData, filters) => {
-        console.log('Filter applied:', filters, 'Results:', filteredData.length);
         this.handleFilterChange(filteredData, filters);
       });
 
@@ -268,7 +266,6 @@ export default class HomePage {
   async render() {
     try {
       this.data = await getStoryData(this.token);
-      console.log('Data retrieved:', this.data);
       
       if (!this.data || !this.data.listStory || this.data.listStory.length === 0) {
         return this.renderEmptyState();
@@ -386,7 +383,6 @@ export default class HomePage {
   }
 
   async afterRender() {
-    console.log('Starting afterRender...');
     
     // Initialize components in sequence to avoid conflicts
     try {
@@ -404,9 +400,7 @@ export default class HomePage {
 
       // 5. Setup filter toggle button
       this.setupFilterToggle();
-      
-      console.log('afterRender completed successfully');
-      
+            
     } catch (error) {
       console.error('Error in afterRender:', error);
     }

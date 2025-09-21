@@ -7,7 +7,7 @@ import CONFIG from "../../../config";
 export default class StoryAPI {
   constructor(options = {}) {
     this.apiBaseUrl = CONFIG.BASE_URL;
-    this.token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJ1c2VyLWJyWXdJZ2o3TG9uaEdmMDUiLCJpYXQiOjE3NTgxMDA1NDZ9.PhJAYot_sLL2KxJbVIQXYC5X4_gP0u1HZgAjyhj--j4"
+    this.token = options.token;
  ;
   }
 
