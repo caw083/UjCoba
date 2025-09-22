@@ -1,6 +1,7 @@
 import routes from '../routes/routes';
 import { getActiveRoute } from '../routes/url-parser';
 import { tokenService } from "../utils/tokenService/tokenService";
+import { subscribe } from '../utils/notification/notificationHelper';
 
 class App {
   #content = null;
