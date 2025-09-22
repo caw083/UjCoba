@@ -19,7 +19,6 @@ export default class HomePage {
     this.isProcessingFilter = false; // Prevent recursive filter calls
     this.locationCache = new Map(); // Cache locations to avoid duplicate API calls
     this.token = tokenService.getToken() || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJ1c2VyLWJyWXdJZ2o3TG9uaEdmMDUiLCJpYXQiOjE3NTgxMDA1NDZ9.PhJAYot_sLL2KxJbVIQXYC5X4_gP0u1HZgAjyhj--j4";
-    console.log(this.token);
   }
 
   formatDate(dateString) {
